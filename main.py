@@ -16,7 +16,7 @@ def main():
     test_corpus = ['fantasy', 'scary', 'twist', 'excited', 'boring']
     print('Start evaluating...')
     for phrase in test_corpus:
-        print(eval.run(phrase))
+        print(eval.run(phrase, k=50))
     print('Done.')
 
 

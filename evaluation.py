@@ -13,8 +13,8 @@ class Evaluation():
         for r in self.reviews:
             if phrase in r['review']:
                 # count[r['book_id']] += 1
-                count[r['book_id']
-                      ] += r['review'].count(phrase) / len(r['review'])
+                count[r['book_id']] += -np.log10(r['review'].count(phrase) /
+                                                 len(r['review']) / r['review_count'])
                 query.append(
                     (r['id'], r['review'], r['review'].count(phrase), r['book_id']))
         ranked = sorted(count.items(), key=lambda x: x[1], reverse=True)
@@ -37,17 +37,18 @@ class Evaluation():
             idcg += ideal[i] / np.log2(i + 1)
         return dcg / idcg
 
-    def run(self, phrase):
+    def run(self, phrase, k=10):
         _, ranked, count = self.raw_query(phrase)
         books = self.api_query(phrase)
         i_book_ids, i_book_scores = zip(*ranked)
-        _, book_scores = zip(*[(b, count[b]) for b in books])
 
         found = 0
         for b in books:
             if b in i_book_ids:
                 found += 1
 
-        ndcg = self.cal_ndcg(i_book_scores[:len(book_scores)], book_scores)
+        _, book_scores = zip(*[(b, count[b] if b in i_book_ids[:k] else 0)
+                               for b in books])
+        ndcg_at_k = self.cal_ndcg(i_book_scores[:k], book_scores[:k])
 
-        return found / len(books), ndcg
+        return found / len(books), ndcg_at_k
